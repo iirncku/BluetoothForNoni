@@ -1,0 +1,75 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+		<ListView
+
+	        android:id="@+id/deviceList1"
+	        android:layout_width="fill_parent"
+	        android:layout_height="80dp"
+	        android:scrollbarStyle="insideOverlay"
+	       	android:background="#efddff"
+	        >
+		</ListView>
+		<ListView
+	        android:id="@+id/deviceList2"
+	        android:layout_width="fill_parent"
+	        android:layout_height="80dp"
+	        android:scrollbarStyle="insideOverlay"        
+	        android:background="#efffaa"
+	        >
+		</ListView>
+<FrameLayout android:id="@+id/FrameLayout1" android:layout_width="fill_parent" android:layout_height="fill_parent" android:background="#ffffff">
+		<TextView
+		    android:id="@+id/HR1"
+		    android:layout_width="160dp"
+		    android:layout_height="50dp"
+		    android:layout_gravity="left"
+		    android:layout_marginTop="0dp"
+		    android:textSize="25sp"
+		    android:background="#ffddff"
+		    android:text="HR1" />
+
+		<TextView
+		    android:id="@+id/SPO1"
+		    android:layout_width="160dp"
+		    android:layout_height="50dp"
+		    android:layout_gravity="right"
+		    android:layout_marginTop="0dp"
+		    android:background="#ffddff"
+		    android:textSize="25sp"
+		    android:text="SPo2_1" />
+
+		<TextView
+		    android:layout_gravity="left"
+		android:layout_marginTop="50dp"
+		android:id="@+id/HR2"
+        android:layout_width="160dp"
+        android:layout_height="50dp"
+        android:text="HR2"
+        android:textSize="25sp"
+        android:background="#fffaaa"
+        />
+		
+		<TextView
+		android:layout_gravity="right"
+		android:layout_marginTop="50dp"
+		android:id="@+id/SPO2"
+        android:layout_width="160dp"
+        android:layout_height="50dp"
+        android:text="SPo2_2"
+        android:textSize="25sp" 
+        android:background="#fffaaa"
+        />
+		<ImageView
+		android:layout_gravity="center|top"
+		android:layout_marginTop="160dp"
+		android:src="@drawable/heart_red"
+		android:id="@+id/heart"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        />
+</FrameLayout>
+	     </LinearLayout>

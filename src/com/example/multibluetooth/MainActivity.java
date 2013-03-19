@@ -52,18 +52,18 @@ import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 
 public class MainActivity extends Activity {
-	private DateFormat dateFormat;
-	private BluetoothAdapter mBtAdapter;
+	private DateFormat dateFormat;//傳輸格式
+	private BluetoothAdapter mBtAdapter;//藍芽接收
 	private ArrayAdapter<String> mPairedDevicesArrayAdapter1;
 	private ArrayAdapter<String> mPairedDevicesArrayAdapter2;
-	private ListView pairedListView1;
-	private ListView pairedListView2;
-	private TextView HR1,SPO1;
-	private TextView HR2,SPO2;
-	private ImageView redheart;
-	private int hr1value=0,hr2value=0,spo21value=0,spo22value=0;
-	private BluetoothDevice device;
-	private BluetoothSocket mmSocket,mmSocket2;
+	private ListView pairedListView1;//裝置清單1
+	private ListView pairedListView2;//裝置清單2
+	private TextView HR1,SPO1;//裝置1心跳血氧顯示
+	private TextView HR2,SPO2;//裝置2心跳血氧顯示
+	private ImageView redheart;//跳動的紅心
+	private int hr1value=0,hr2value=0,spo21value=0,spo22value=0;//血氧，心跳數值
+	private BluetoothDevice device;//藍芽裝置
+	private BluetoothSocket mmSocket,mmSocket2;//藍芽連線SOCKET
 	private InputStream mmInStream,mmInStream2;
     private OutputStream mmOutStream,mmOutStream2;
     private byte[] buffer = new byte[1024];
@@ -73,7 +73,7 @@ public class MainActivity extends Activity {
     private StringBuffer sbSPO2,sbSPO22;
     private StringBuffer sbEI,sbEI2;
     private Thread mthread;
-    private boolean deviceflag = true;
+    private boolean deviceflag = true;//判斷新發現的DIVECE要歸給裝置1還式裝置2
     String address;
     int hr1start=0,hr2start=0;
     
@@ -116,7 +116,7 @@ public class MainActivity extends Activity {
     	requestWindowFeature(Window.FEATURE_NO_TITLE);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main); 
-        
+        //裝置相關訊號顯示(預設為隱藏)
         HR1 = (TextView) findViewById(R.id.HR1);
         HR2 = (TextView) findViewById(R.id.HR2);
         SPO1 = (TextView) findViewById(R.id.SPO1);
@@ -134,7 +134,7 @@ public class MainActivity extends Activity {
         redheart.setAnimation(am);
         final Animation am2 = new ScaleAnimation(1.3f,1f,1.3f,1f,Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
         am2.setDuration( 1000 );
-        //連續動畫
+        //連續動畫設置
         am.setAnimationListener(new AnimationListener(){
 
 			public void onAnimationEnd(Animation animation) {
@@ -208,14 +208,15 @@ public class MainActivity extends Activity {
 				for(;;){
 					try {
 						//Log.i("thread","callback");
-						if(hr1start==1||hr2start==1){
+						if(hr1start==1||hr2start==1){//有裝置連接才處理
 							handler.post(heartalpha);
-							if(hr1start==1){
+							if(hr1start==1){//裝置1已連接
 								try {
-									bytes = mmInStream.read(buffer);
+									bytes = mmInStream.read(buffer);//讀取資料到buffer
 						        	sbHR = new StringBuffer();
 						        	sbSPO2 = new StringBuffer();
 						        	sbEI = new StringBuffer();
+						        	//擷取需要資料
 						        	hr1value=(buffer[1]+(buffer[0]-0x80)*128 & 0xff);
 						        	spo21value=(buffer[2] & 0xff);
 						        	sbHR.append(Integer.toString(hr1value ,10));
@@ -226,7 +227,7 @@ public class MainActivity extends Activity {
 								}
 			        			handler.post(callback);
 							}
-							if(hr2start==1){
+							if(hr2start==1){//裝置2已連接
 								try {
 									bytes = mmInStream2.read(buffer2);
 									sbHR2 = new StringBuffer();
@@ -262,19 +263,22 @@ public class MainActivity extends Activity {
 		
     }
     
-    
+
+    //*****點及裝置清單中的裝置，對其進行連線動作
 ProgressDialog myDialog ;
 private OnItemClickListener mDeviceClickListener = new OnItemClickListener() {
 		public void onItemClick(AdapterView<?> av, View v, int arg2, long arg3) {            
             mBtAdapter.cancelDiscovery();
             // Get the device MAC address, which is the last 17 chars in the View
             String info = ((TextView) v).getText().toString();
+            //檢查選取的是否為尚未連接的裝置
             if(!info.equals(getResources().getString(R.string.noDevice))
             		&&!info.equals(getResources().getString(R.string.DeviceConnected)))
             {
+            	//取的address
             	address = info.substring(info.length() - 17);
                 device = mBtAdapter.getRemoteDevice(address);
-    		    if(device.getBondState()==BluetoothDevice.BOND_NONE){  
+    		    if(device.getBondState()==BluetoothDevice.BOND_NONE){  //尚未配對，進行配對動作(此CODE沒用到)
                     Method createBondMethod;
 					try {
 						createBondMethod = BluetoothDevice.class.getMethod("createBond");
@@ -284,7 +288,7 @@ private OnItemClickListener mDeviceClickListener = new OnItemClickListener() {
 						e.printStackTrace();
 					}
     		    }   		    
-    		    else{
+    		    else{//對可連線裝置進行連線
     		    	if(BluetoothAdapter.checkBluetoothAddress(address)){
     		    	  myDialog = ProgressDialog.show(MainActivity.this, "Warning...",
     		        			"裝置連線中...", true);
@@ -296,8 +300,10 @@ private OnItemClickListener mDeviceClickListener = new OnItemClickListener() {
     		        			try {
  			
     		        				device = mBtAdapter.getRemoteDevice(address);
-    		            			if(mmSocket != null)
+    		        				//若socket有其它連線，強制關閉
+    		        				if(mmSocket != null)
     		            			mmSocket.close();
+    		        				
     		    					mmSocket = device.createRfcommSocketToServiceRecord(UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"));
     		            			mmSocket.connect();
     		    		        	mmInStream = mmSocket.getInputStream();
@@ -305,11 +311,11 @@ private OnItemClickListener mDeviceClickListener = new OnItemClickListener() {
     		    		     		byte [] setFormatMsg = {0x02, 0x70, 0x02, 0x02, 0x08, 0x03};//傳輸格式
     		    		     		mmOutStream.write(setFormatMsg);
     		    		        		Log.i("try","  mmOutStream.write");
-    		    		        	
+    		    		        	//把裝置1標記為已連線
     		    		        	hr1start=1;
     		    		            Runnable UIvisibility = new Runnable(){
     		    		        		public void run() {
-    		    		    
+    		    		        			//開啟裝置1相關介面顯示
     		    		                	pairedListView1.setVisibility(8);
     		    		                    HR1.setVisibility(0);
     		    		                    SPO1.setVisibility(0);
@@ -342,10 +348,11 @@ private OnItemClickListener mDeviceClickListener = new OnItemClickListener() {
             if(!info.equals(getResources().getString(R.string.noDevice)))
             {
             	address = info.substring(info.length() - 17);
+            	//檢查選取的是否為尚未連接的裝置
                 device = mBtAdapter.getRemoteDevice(address);
     		    if(device.getBondState()==BluetoothDevice.BOND_NONE){  
                     Method createBondMethod;
-					try {
+					try {//尚未配對，進行配對動作(此CODE沒用到)
 						createBondMethod = BluetoothDevice.class.getMethod("createBond");
 						createBondMethod.invoke(device);   
 					} catch (Exception e) {
@@ -353,7 +360,7 @@ private OnItemClickListener mDeviceClickListener = new OnItemClickListener() {
 						e.printStackTrace();
 					}
     		    }   		    
-    		    else{
+    		    else{//對可連線裝置進行連線
     		    	if(BluetoothAdapter.checkBluetoothAddress(address)){
     		    	  myDialog = ProgressDialog.show(MainActivity.this, "Warning...",
     		        			"裝置2連線中...", true);
@@ -365,6 +372,7 @@ private OnItemClickListener mDeviceClickListener = new OnItemClickListener() {
     		        			try {
     		        			
     		        				device = mBtAdapter.getRemoteDevice(address);
+    		        				//若socket有其它連線，強制關閉
     		            			if(mmSocket2 != null)
     		            			mmSocket2.close();
     		    					mmSocket2 = device.createRfcommSocketToServiceRecord(UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"));
@@ -374,11 +382,11 @@ private OnItemClickListener mDeviceClickListener = new OnItemClickListener() {
     		    		     		byte [] setFormatMsg = {0x02, 0x70, 0x02, 0x02, 0x08, 0x03};//傳輸格式
     		    		     		mmOutStream2.write(setFormatMsg);
     		    		        		Log.i("try","  mmOutStream2.write");
-    		    		        	
+    		    		        	//把裝置2標為已連線
     		    		        	hr2start=1;
     		    		            Runnable UIvisibility = new Runnable(){
     		    		        		public void run() {
-    		    		    
+    		    		        			//顯示裝置2相關介面
     		    		                	pairedListView2.setVisibility(8);
     		    		                    HR2.setVisibility(0);
     		    		                    SPO2.setVisibility(0);
@@ -409,26 +417,26 @@ private OnItemClickListener mDeviceClickListener = new OnItemClickListener() {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
 
-            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+            if (BluetoothDevice.ACTION_FOUND.equals(action)) {//找到新裝置
                 
-                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);//取的該裝置資訊
                 
-                if (device.getBondState() != BluetoothDevice.BOND_BONDED) {
+                if (device.getBondState() != BluetoothDevice.BOND_BONDED) {//檢查是否為以配對裝置
                 }
-                else{
-                	if(deviceflag==true){
+                else{//依據deviceflag放入裝置清單
+                	if(deviceflag==true){//放入裝置清單1
                 		mPairedDevicesArrayAdapter1.add(device.getName()+"\n"+device.getAddress());
                 		deviceflag = false;
                 	}
-                	else{
+                	else{//放入裝置清單2
                 		mPairedDevicesArrayAdapter2.add(device.getName()+"\n"+device.getAddress());
                 		deviceflag = true;
                 	}
                 }
                 
-            } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
+            } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {//有裝置斷線掃描裝置完畢
                 
-            } else if(BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)){
+            } else if(BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)){//有裝置斷線
         }
         }
     };
@@ -443,7 +451,7 @@ private OnItemClickListener mDeviceClickListener = new OnItemClickListener() {
     
     @Override
 	protected void onPause() {
-    	try {
+    	try {		//關閉socket
     		        if (mmSocket!=null){
     		        	mmSocket.close();
     		        }
